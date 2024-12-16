@@ -1,0 +1,88 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Expense {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  name       String
+  amount     Float
+  currency   String
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user       User     @relation(fields: [user_id], references: [id])
+}
+
+model User {
+  id              Int            @id @default(autoincrement())
+  email           String         @unique
+  scans_remaining Int
+  created_at      DateTime       @default(now())
+  expenses        Expense[]
+  quick_expenses  QuickExpense[]
+  receipts        Receipt[]
+  invoices        Invoice[]
+}
+
+model Receipt {
+  id         Int           @id @default(autoincrement())
+  user_id    Int
+  name       String
+  market     String
+  currency   String
+  created_at DateTime      @default(now())
+  user       User          @relation(fields: [user_id], references: [id])
+  items      ReceiptItem[]
+}
+
+model ReceiptItem {
+  id         Int     @id @default(autoincrement())
+  receipt_id Int
+  name       String
+  amount     Float
+  quantity   Float
+  unit       String
+  receipt    Receipt @relation(fields: [receipt_id], references: [id])
+}
+
+model Invoice {
+  id                Int        @id @default(autoincrement())
+  user_id           Int
+  stripe_payment_id Int
+  membership_id     Int
+  created_at        DateTime   @default(now())
+  user              User       @relation(fields: [user_id], references: [id])
+  membership        Membership @relation(fields: [membership_id], references: [id])
+}
+
+model QuickExpense {
+  id         Int      @id @default(autoincrement())
+  user_id    Int
+  icon       String
+  name       String
+  amount     Float
+  currency   String
+  order      Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  user       User     @relation(fields: [user_id], references: [id])
+}
+
+model Membership {
+  id       Int       @id @default(autoincrement())
+  name     String    @default("Basic")
+  cost     Float
+  scans    Int
+  invoices Invoice[]
+}

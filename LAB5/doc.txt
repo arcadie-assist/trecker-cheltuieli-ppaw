@@ -1,0 +1,4 @@
+// dupa orice schimbare im schema.prisma, trebuie sa rulez urmatorul command:
+// npx prisma migrate dev --name <name>
+// acesta va genera un fisier de migrare si va aplica schimbarile in baza de date
+
