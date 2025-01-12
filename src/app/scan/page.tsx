@@ -1,32 +1,30 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { useScanReceipt } from "@/hooks/receipt.hooks";
-// import { useScanReceipt } from "@/hooks/receipts.hooks";
-import {
-  Upload,
-  Receipt,
-  Camera,
-  Loader2,
-  ImagePlus,
-  ScanLine,
-} from "lucide-react";
+import { useScanReceipt, useTodayReceipts } from "@/hooks/receipt.hooks";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Receipt, Upload, AlertCircle, CreditCard } from "lucide-react";
+import PageHeader from "@/components/PageHeader";
+import { useUser } from "@/hooks/user.hooks";
+import { Button } from "@/components/ui/button";
 
 export default function ScanPage() {
   const router = useRouter();
   const [isDragging, setIsDragging] = useState(false);
   const { trigger, isMutating } = useScanReceipt();
+  const { data: user } = useUser();
 
   const handleScan = async () => {
+    if (!user?.scans_remaining) {
+      toast.error("No scans remaining. Please purchase a membership.");
+      return;
+    }
+
     try {
       const response = await trigger();
       toast.success("Receipt scanned successfully!");
-      // Redirect to the receipt details page
-      router.push(`/scan/${response.data.id}`);
+      router.push(`/scan/${response.id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to scan receipt");
     }
@@ -45,81 +43,111 @@ export default function ScanPage() {
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
-    // Trigger scan when file is dropped
     handleScan();
   };
 
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2 flex items-center justify-center gap-2">
-          <Receipt className="h-8 w-8" />
-          Receipt Scanner
-        </h1>
-        <p className="text-muted-foreground">
-          Upload your receipt and we'll extract all items automatically
-        </p>
-      </div>
+  if (!user?.scans_remaining) {
+    return (
+      <div className="p-8">
+        <PageHeader
+          title="Receipt Scanner"
+          description="Upload your receipt and we'll extract all items automatically"
+        />
 
-      <Card
-        className={`p-8 ${
-          isDragging ? "border-primary border-2" : ""
-        } transition-all`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        <div className="text-center">
-          <div className="mb-6">
-            <div className="w-20 h-20 mx-auto bg-muted rounded-full flex items-center justify-center mb-4">
-              <Upload className="h-10 w-10 text-muted-foreground" />
-            </div>
-            <h2 className="text-xl font-semibold mb-2">
-              Drag and drop your receipt
-            </h2>
-            <p className="text-muted-foreground mb-4">
-              or use one of the options below
+        <div className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12">
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+            <CreditCard className="h-6 w-6 text-blue-500" />
+          </div>
+          <div className="text-center mb-6">
+            <p className="mb-1 text-lg font-medium">No Scans Remaining</p>
+            <p className="text-sm text-muted-foreground">
+              Purchase a membership to continue scanning receipts
             </p>
           </div>
+          <Button
+            onClick={() => router.push("/memberships")}
+            className="flex items-center gap-2"
+          >
+            View Memberships
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
-          <div className="grid gap-4 max-w-sm mx-auto">
-            <Button
-              className="w-full"
-              onClick={() => handleScan()}
-              disabled={isMutating}
-            >
-              {isMutating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Scanning...
-                </>
-              ) : (
-                <>
-                  <ImagePlus className="mr-2 h-4 w-4" />
-                  Upload Receipt
-                </>
-              )}
-            </Button>
+  return (
+    <div className="p-8">
+      <PageHeader
+        title="Receipt Scanner"
+        description="Upload your receipt and we'll extract all items automatically"
+      />
 
-            <Button variant="outline" className="w-full">
-              <Camera className="mr-2 h-4 w-4" />
-              Take Photo
-            </Button>
+      <div className="inline-block px-3 py-1 mb-4 rounded-full bg-blue-500/10">
+        <span className="text-sm font-medium text-blue-500">
+          {user.scans_remaining} scan{user.scans_remaining !== 1 ? "s" : ""}{" "}
+          remaining
+        </span>
+      </div>
+
+      <div className="grid gap-8 md:grid-cols-2">
+        {/* Upload Section */}
+        <div
+          className={`relative flex flex-col items-center justify-center rounded-lg border-2 border-dashed p-12 transition-all
+            ${
+              isDragging
+                ? "border-blue-500 bg-blue-500/5"
+                : "border-border hover:border-blue-500/20 hover:bg-blue-500/5"
+            }
+          `}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={handleScan}
+        >
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-blue-500/10">
+            <Upload className="h-6 w-6 text-blue-500" />
+          </div>
+          <div className="text-center">
+            <p className="mb-1 text-base font-medium">Drop receipt here</p>
+            <p className="text-sm text-muted-foreground">
+              or click to select a file
+            </p>
           </div>
         </div>
-      </Card>
 
-      <div className="mt-8">
-        <h3 className="font-semibold mb-4 flex items-center gap-2">
-          <ScanLine className="h-5 w-5" />
-          Scanning Tips
-        </h3>
-        <ul className="space-y-2 text-sm text-muted-foreground">
-          <li>• Ensure the receipt is flat and well-lit</li>
-          <li>• Capture the entire receipt in the frame</li>
-          <li>• Avoid shadows and glare on the receipt</li>
-          <li>• Make sure the text is clearly visible</li>
-        </ul>
+        {/* Info Section */}
+        <div className="space-y-4">
+          <div className="flex items-start gap-4 rounded-lg border p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
+              <Receipt className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <h3 className="font-medium">Supported Formats</h3>
+              <p className="text-sm text-muted-foreground">
+                We support JPG, PNG and PDF files up to 10MB
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-start gap-4 rounded-lg border p-4">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-500/10">
+              <AlertCircle className="h-5 w-5 text-blue-500" />
+            </div>
+            <div>
+              <h3 className="font-medium">Processing Time</h3>
+              <p className="text-sm text-muted-foreground">
+                Processing usually takes 10-15 seconds depending on the receipt
+                size
+              </p>
+            </div>
+          </div>
+
+          {isMutating && (
+            <div className="rounded-lg bg-blue-500/5 p-4 text-sm text-blue-500">
+              Processing your receipt... This might take a few seconds.
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

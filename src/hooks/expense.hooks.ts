@@ -14,3 +14,19 @@ export const useAddExpense = () => {
     (url: string, { arg }: { arg: ExpenseCreateBody }) => axios.post(url, arg)
   );
 };
+
+export const useUpdateExpense = () => {
+  return useSWRMutation(
+    `/api/expenses`,
+    (url: string, { arg }: { arg: { id: number; data: ExpenseCreateBody } }) =>
+      axios.put(`${url}/${arg.id}`, arg.data)
+  );
+};
+
+export const useDeleteExpense = () => {
+  return useSWRMutation(
+    `/api/expenses`,
+    (url: string, { arg }: { arg: { id: number } }) =>
+      axios.delete(`${url}/${arg.id}`)
+  );
+};

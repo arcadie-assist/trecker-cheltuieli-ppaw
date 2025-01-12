@@ -1,28 +1,65 @@
-import { PrismaReceipt } from "@/types/receipt.types";
-import { fetcher } from "@/utils/fetcher";
-import axios from "axios";
+import { PrismaReceipt, PrismaReceiptItem } from "@/types/receipt.types";
 import useSWR from "swr";
 import useSWRMutation from "swr/mutation";
 
-export const useReceipt = (id: string) => {
-  return useSWR<PrismaReceipt & { items: any[] }>(
+async function fetchReceipt(id: string) {
+  const response = await fetch(`/api/receipts/${id}`);
+  if (!response.ok) throw new Error("Failed to fetch receipt");
+  return response.json();
+}
+
+async function approveReceipt(url: string, { arg }: { arg: { id: number } }) {
+  const response = await fetch(`/api/receipts/${arg.id}`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Failed to approve receipt");
+  return response.json();
+}
+
+async function fetchTodayReceipts() {
+  const response = await fetch("/api/receipts");
+  if (!response.ok) throw new Error("Failed to fetch receipts");
+  return response.json();
+}
+
+async function deleteReceipt(url: string, { arg }: { arg: { id: number } }) {
+  const response = await fetch(`/api/receipts/${arg.id}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error("Failed to delete receipt");
+  return response.json();
+}
+
+async function scanReceipt(url: string) {
+  const response = await fetch("/api/scan", {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error("Failed to scan receipt");
+  return response.json();
+}
+
+export function useReceipt(id: string) {
+  return useSWR<PrismaReceipt & { items: PrismaReceiptItem[] }>(
     id ? `/api/receipts/${id}` : null,
-    fetcher
+    () => fetchReceipt(id)
   );
-};
+}
 
-export const useTodayReceipts = () => {
-  return useSWR<(PrismaReceipt & { items: any[] })[]>("/api/receipts", fetcher);
-};
-
-export const useScanReceipt = () => {
-  return useSWRMutation(`/api/scan`, (url: string) => axios.post(url));
-};
-
-export const useDeleteReceipt = () => {
-  return useSWRMutation(
-    `/api/receipts`,
-    (url: string, { arg }: { arg: { id: number } }) =>
-      axios.delete(`${url}/${arg.id}`)
+export function useTodayReceipts() {
+  return useSWR<(PrismaReceipt & { items: PrismaReceiptItem[] })[]>(
+    "/api/receipts",
+    fetchTodayReceipts
   );
-};
+}
+
+export function useDeleteReceipt() {
+  return useSWRMutation("/api/receipts/delete", deleteReceipt);
+}
+
+export function useScanReceipt() {
+  return useSWRMutation("/api/scan", scanReceipt);
+}
+
+export function useApproveReceipt() {
+  return useSWRMutation("/api/receipts/approve", approveReceipt);
+}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prismaClient";
 
+// Get receipt
 export async function GET(
   request: Request,
   { params }: { params: { id: string } }
@@ -30,6 +31,7 @@ export async function GET(
   return NextResponse.json(receipt);
 }
 
+// Delete receipt
 export async function DELETE(
   request: Request,
   { params }: { params: { id: string } }
@@ -53,6 +55,19 @@ export async function DELETE(
       id: parseInt(params.id),
       user_id: user.id,
     },
+  });
+
+  return NextResponse.json({ success: true });
+}
+
+// Approve receipt
+export async function POST(
+  request: Request,
+  { params }: { params: { id: string } }
+) {
+  await prisma.receipt.update({
+    where: { id: parseInt(params.id) },
+    data: { approved: true },
   });
 
   return NextResponse.json({ success: true });

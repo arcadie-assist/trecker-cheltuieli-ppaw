@@ -1,8 +1,24 @@
-import { Expense as PrismaExpense } from "@prisma/client";
+import {
+  Expense as PrismaExpense,
+  QuickExpense as PrismaQuickExpense,
+} from "@prisma/client";
+import { LucideIcon } from "./icon.types";
 
 type ExpenseCreateBody = Omit<
   PrismaExpense,
   "id" | "user_id" | "created_at" | "updated_at"
 >;
 
-export type { PrismaExpense, ExpenseCreateBody };
+type QuickExpenseCreateBody = Omit<
+  PrismaQuickExpense,
+  "id" | "user_id" | "created_at" | "updated_at" | "order"
+> & {
+  icon: LucideIcon;
+};
+
+export type {
+  PrismaExpense,
+  PrismaQuickExpense,
+  ExpenseCreateBody,
+  QuickExpenseCreateBody,
+};

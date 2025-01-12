@@ -41,6 +41,7 @@ model Receipt {
   name       String
   market     String
   currency   String
+  approved   Boolean       @default(false)
   created_at DateTime      @default(now())
   user       User          @relation(fields: [user_id], references: [id])
   items      ReceiptItem[]
@@ -68,15 +69,17 @@ model Invoice {
 
 model QuickExpense {
   id         Int      @id @default(autoincrement())
-  user_id    Int
-  icon       String
   name       String
   amount     Float
   currency   String
-  order      Int
+  icon       String   @default("ShoppingCart")
+  user_id    Int
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
+  order      Int      @default(0)
   user       User     @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
 }
 
 model Membership {

@@ -17,6 +17,7 @@ export async function GET() {
   const receipts = await prisma.receipt.findMany({
     where: {
       user_id: user.id,
+      approved: true,
       created_at: {
         gte: startOfDay,
         lte: endOfDay,
