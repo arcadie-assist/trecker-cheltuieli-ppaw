@@ -16,17 +16,24 @@ export default function ScanPage() {
   const { data: user } = useUser();
 
   const handleScan = async () => {
-    if (!user?.scans_remaining) {
-      toast.error("No scans remaining. Please purchase a membership.");
-      return;
-    }
-
     try {
       const response = await trigger();
+
+      if (response.error) {
+        toast.error(response.error);
+        if (response.error === "No scans remaining") {
+          router.push("/memberships");
+        }
+        return;
+      }
+
       toast.success("Receipt scanned successfully!");
       router.push(`/scan/${response.id}`);
     } catch (error: any) {
       toast.error(error.response?.data?.error || "Failed to scan receipt");
+      if (error.response?.data?.error === "No scans remaining") {
+        router.push("/memberships");
+      }
     }
   };
 

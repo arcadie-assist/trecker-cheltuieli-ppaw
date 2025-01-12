@@ -1,27 +1,20 @@
-import { prisma } from "@/lib/prismaClient";
-import { QuickExpenseCreateBody } from "@/types/expense.types";
+import { QuickExpenseService } from "@/services/quickExpenseService";
+
+const quickExpenseService = new QuickExpenseService();
 
 export async function PUT(
   request: Request,
   { params }: { params: { id: string } }
 ) {
   const user_id = 1;
-  const { name, amount, currency, icon } =
-    (await request.json()) as QuickExpenseCreateBody;
 
   try {
-    const quickExpense = await prisma.quickExpense.update({
-      where: {
-        id: parseInt(params.id),
-        user_id,
-      },
-      data: {
-        name,
-        amount,
-        currency,
-        icon,
-      },
-    });
+    const body = await request.json();
+    const quickExpense = await quickExpenseService.updateQuickExpense(
+      parseInt(params.id),
+      body,
+      user_id
+    );
     return Response.json(quickExpense);
   } catch (error) {
     return Response.json(
@@ -38,14 +31,10 @@ export async function DELETE(
   const user_id = 1;
 
   try {
-    await prisma.quickExpense.delete({
-      where: {
-        id: parseInt(params.id),
-        user_id,
-      },
-    });
+    await quickExpenseService.deleteQuickExpense(parseInt(params.id), user_id);
     return Response.json({ success: true });
   } catch (error) {
+    console.error("Delete error:", error);
     return Response.json(
       { error: "DELETE QUICK EXPENSE ERROR" },
       { status: 500 }

@@ -83,8 +83,6 @@ function ExpensesAside() {
 
   const totalSpent = allExpenses.reduce((sum, item) => sum + item.amount, 0);
 
-  console.log(allExpenses);
-
   return (
     <aside className="relative w-80">
       <div className="absolute flex flex-col inset-0">
